@@ -21,6 +21,8 @@
 
 package org.kapott.hbci.passport;
 
+import org.kapott.hbci.manager.HBCIUtils;
+
 /**
  * Implementierung eines PIN/TAN-Passport, welcher keine Daten im Dateisystem ablegt
  * sondern alle Daten im Speicher haelt.
@@ -43,16 +45,36 @@ public class HBCIPassportPinTanMemory extends HBCIPassportPinTan
   @Override
   protected void create()
   {
-    // Ueberschrieben, um das Erstellen der Passport-Datei zu ueberspringen.
+    // Überschrieben, um das Einlesen der Passport-Datei zu überspringen.
+
+    // Trotzdem benötigen wir hier den Aufruf von getCurrentTANMethod(), die ein passendes TAN-Verfahren ermittelt oder den Nutzer zur Eingabe auffordert.
+    // Ansonsten wird tanMethod nicht gesetzt und die folgende Authentifizierung schlägt fehl.
+
+    try
+    {
+      final String s = this.getCurrentTANMethod(false);
+      HBCIUtils.log("saving current tan method: " + s, HBCIUtils.LOG_DEBUG);
+      this.setCurrentTANMethod(s);
+    }
+    catch (Exception e)
+    {
+      // Nur zur Sicherheit. In der obigen Funktion werden u.U. eine Menge Sachen losgetreten.
+      // Wenn da irgendwas schief laeuft, soll deswegen nicht gleich das Speichern der Config
+      // scheitern. Im Zweifel speichern wir dann halt das ausgewaehlte Verfahren erstmal nicht
+      // und der User muss es beim naechsten Mal neu waehlen
+      HBCIUtils.log("could not determine current tan methode, skipping: " + e.getMessage(), HBCIUtils.LOG_DEBUG);
+      HBCIUtils.log(e, HBCIUtils.LOG_DEBUG2);
+    }
   }
-  
+
   /**
    * @see org.kapott.hbci.passport.HBCIPassportPinTan#read()
    */
   @Override
   protected void read()
   {
-    // Ueberschrieben, um das Einlesen der Passport-Datei zu ueberspringen.
+    // Überschrieben, um das Einlesen der Passport-Datei zu überspringen.
+    create();
   }
 
   /**
@@ -61,9 +83,8 @@ public class HBCIPassportPinTanMemory extends HBCIPassportPinTan
   @Override
   public void saveChanges()
   {
-    // Ueberschrieben, um das Schreiben zu ueberspringen.
   }
-  
+
   /**
    * @see java.lang.Object#toString()
    */
@@ -72,7 +93,6 @@ public class HBCIPassportPinTanMemory extends HBCIPassportPinTan
   {
     return this.getFileName();
   }
-  
 }
 
 
